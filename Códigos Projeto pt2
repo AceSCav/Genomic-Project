@@ -1,0 +1,75 @@
+
+---- preparação dos dados para faciltiar
+cd ~../dados
+mv ./fastq_files/ERR10042341_P10T_P01.fastq.gz ./genome/10t1.fastq.gz
+mv ./fastq_files/ERR10042365_P7T_P01.fastq.gz ./genome/7t1.fastq.gz
+mv ./fastq_files/ERR10042382_P10B_P01.fastq.gz ./genome/10b1.fastq.gz
+mv ./fastq_files/ERR10042405_P7B_P01.fastq.gz ./genome/7b1.fastq.gz
+mv ./fastq_files/ERR10042341_P10T_P02.fastq.gz ./genome/10t2.fastq.gz
+mv ./fastq_files/ERR10042365_P7T_P02.fastq.gz ./genome/7t2.fastq.gz
+mv ./fastq_files/ERR10042382_P10B_P02.fastq.gz ./genome/10b2.fastq.gz
+mv ./fastq_files/ERR10042405_P7B_P02.fastq.gz ./genome/7b2.fastq.gz
+cd genome/ 
+
+----- limpeza das reads
+cutadapt -m 100 -q 20 -o ./10t1_clean.fastq -p ./10t2_clean.fastq ./10t1.fastq.gz ./10t2.fastq.gz
+cutadapt -m 100 -q 20 -o ./7b1_clean.fastq -p ./7b2_clean.fastq ./7b1.fastq.gz ./7b2.fastq.gz
+cutadapt -m 100 -q 20 -o ./7t1_clean.fastq -p ./7t2_clean.fastq ./7t1.fastq.gz ./7t2.fastq.gz
+cutadapt -m 100 -q 20 -o ./10b1_clean.fastq -p ./10b2_clean.fastq ./10b1.fastq.gz ./10b2.fastq.gz
+
+----- index do genoma de referencia 
+gunzip Homo_sapiens.GRCh38.dna.chromosome.MT.fa.gz
+mv Homo_sapiens.GRCh38.dna.chromosome.MT.fa genome.fa
+cp genome.fa genome_faidx.fa
+bwa index genome.fa
+samtools faidx genome_faidx.fa
+
+----- código feito para o indivíduo 7b
+bwa mem genome.fa 7b1_clean.fastq 7b2_clean.fastq > 7b_aligned.sam
+samtools view -q 10 -f 3 -b 7b_aligned.sam > 7b_aligned.bam
+rm 7b_aligned.sam
+samtools sort 7b_aligned.bam> 7b_aligned_sorted.bam
+samtools index 7b_aligned_sorted.bam
+bcftools mpileup -Ou -f genome_faidx.fa 7b_aligned_sorted.bam | bcftools call -mv -Ob --ploidy 1 -o 7b_aligned_sorted_var.bcf
+bcftools view -i 'QUAL>=20' 7b_aligned_sorted_var.bcf > 7b_aligned_sorted_var.vcf
+
+----- código feito para o indivíduo 7t
+bwa mem genome.fa 7t1_clean.fastq 7t2_clean.fastq > 7t_aligned.sam
+samtools view -q 10 -f 3 -b 7t_aligned.sam > 7t_aligned.bam
+rm 7t_aligned.sam
+samtools sort 7t_aligned.bam> 7t_aligned_sorted.bam
+samtools index 7t_aligned_sorted.bam
+bcftools mpileup -Ou -f genome_faidx.fa 7t_aligned_sorted.bam | bcftools call -mv -Ob --ploidy 1 -o 7t_aligned_sorted_var.bcf
+bcftools view -i 'QUAL>=20' 7t_aligned_sorted_var.bcf > 7t_aligned_sorted_var.vcf
+
+----- código feito para o indivíduo 10b
+bwa mem genome.fa 10b1_clean.fastq 10b2_clean.fastq > 10b_aligned.sam
+samtools view -q 10 -f 3 -b 10b_aligned.sam > 10b_aligned.bam
+rm 10b_aligned.sam
+samtools sort 10b_aligned.bam> 10b_aligned_sorted.bam
+samtools index 10b_aligned_sorted.bam
+bcftools mpileup -Ou -f genome_faidx.fa 10b_aligned_sorted.bam | bcftools call -mv -Ob --ploidy 1 -o 10b_aligned_sorted_var.bcf
+bcftools view -i 'QUAL>=20' 10b_aligned_sorted_var.bcf > 10b_aligned_sorted_var.vcf
+
+----- código feito para o indivíduo 10t
+bwa mem genome.fa 10t1_clean.fastq 10t2_clean.fastq > 10t_aligned.sam
+samtools view -q 10 -f 3 -b 10t_aligned.sam > 10t_aligned.bam
+rm 10t_aligned.sam
+samtools sort 10t_aligned.bam> 10t_aligned_sorted.bam
+samtools index 10t_aligned_sorted.bam
+bcftools mpileup -Ou -f genome_faidx.fa 10t_aligned_sorted.bam | bcftools call -mv -Ob --ploidy 1 -o 10t_aligned_sorted_var.bcf
+bcftools view -i 'QUAL>=20' 10t_aligned_sorted_var.bcf > 10t_aligned_sorted_var.vcf
+
+------ refino para analisar
+grep -v '^##' 7b_aligned_sorted_var.vcf | cut -f 1,2,4,5,6,10 > 7b_aligned_sorted_var_simple.txt
+grep -v '^##' 7t_aligned_sorted_var.vcf | cut -f 1,2,4,5,6,10 > 7t_aligned_sorted_var_simple.txt
+grep -v '^##' 10b_aligned_sorted_var.vcf | cut -f 1,2,4,5,6,10 > 10b_aligned_sorted_var_simple.txt
+grep -v '^##' 10t_aligned_sorted_var.vcf | cut -f 1,2,4,5,6,10 > 10t_aligned_sorted_var_simple.txt
+
+------- Usar o programa samtools com a modo flagstat para contar o número de reads que mapearam em proper pair com qualidade acima de 10 redirecionando para um arquivo .txt
+samtools flagstat 7b_aligned.bam > 7b_aligned_bam_fagstat.txt
+samtools flagstat 7t_aligned.bam > 7t_aligned_bam_fagstat.txt
+samtools flagstat 10b_aligned.bam > 10b_aligned_bam_fagstat.txt
+samtools flagstat 10t_aligned.bam > 710t_aligned_bam_fagstat.txt
+
+-----

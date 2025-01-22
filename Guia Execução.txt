@@ -1,0 +1,28 @@
+- pegar as sequencias limpa-las ( cutadpt ) 
+-- definir um valor para o minimo da sequencia limpa, fazer um for loop rapido em paired end.
+- passar as sequencias limpas e o genoma de referencia ( fastq ) pelo BWA ( vai sair um arquivo .sam ) 
+- pegar novamente o genoma de referencia ( .fasta) e correr no samtools ( isso vai gerar um arquivo (.fasta) e index
+-- faidx 
+- pegar o arquivo .sam e utilizabwa-lo no SAMtools ( isso vai gerar um arquivoi .bam)
+-- view
+-- -q 10
+-- -f 3
+- pegar o arquivo .bam e passar novamente pelo samtools ( isso vai gerar um arquivo .sorted.bam)
+-- sort
+DAQUI SAI DUAS FASES
+1 que finaliza em um passo 
+- passar o arquivo .sorted.bam pelo samtools ( isso vai gerar um arquivo .sorted.bai
+--index
+---- aqui eu posso detectar as mutações. utilizar o igv, carregar o ficheiro bam se tiver o ficheirio index na mesma pasta no igv sorted.bam + sorted bai ) 
+
+2
+pegar o arquivo .sorted.bam e o genoma de referencia correr no BCFtools( isso vai gerar um arquivo_var.bcf )
+-- mpileup
+--call
+
+correr o arquivo anterior no bcftools ( isso vai gerar um arquivo_var.vcf)
+--view(filtering)
+com esse ultimo arquivo fazemos a Interpretação, pesquisa de
+SNPs e INDELs, associação
+com características de interesse
+
